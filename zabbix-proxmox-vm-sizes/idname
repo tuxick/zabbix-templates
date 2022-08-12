@@ -1,0 +1,13 @@
+#!/bin/bash
+# Print name corresponding to PVE ID
+
+CONF="/etc/pve/nodes/*/qemu-server/"
+if [ $# -lt 1 ]
+then
+        echo "Usage: $0 ID"
+        exit 1
+fi
+ID=$1
+
+grep '^name:' $CONF/$ID.conf | awk '{print $2}' | head -n 1
+
