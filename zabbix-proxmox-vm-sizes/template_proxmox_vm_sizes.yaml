@@ -1,0 +1,70 @@
+zabbix_export:
+  version: '5.2'
+  date: '2022-08-12T15:35:42Z'
+  groups:
+    -
+      name: BACKUP
+    -
+      name: 'Custom Templates'
+    -
+      name: PROXMOX
+  templates:
+    -
+      template: 'Proxmox VM sizes'
+      name: 'Proxmox VM sizes'
+      description: 'https://blog.zabbix.com/low-level-discovery-with-dependent-items/13634/'
+      groups:
+        -
+          name: BACKUP
+        -
+          name: 'Custom Templates'
+        -
+          name: PROXMOX
+      applications:
+        -
+          name: PBS
+        -
+          name: 'VM sizes'
+      items:
+        -
+          name: 'master share sizes'
+          key: vmsizes.get
+          delay: 1h
+          trends: '0'
+          value_type: TEXT
+          description: 'master item'
+          applications:
+            -
+              name: 'VM sizes'
+      discovery_rules:
+        -
+          name: 'find the shares'
+          type: DEPENDENT
+          key: vmsizes.discover
+          delay: '0'
+          item_prototypes:
+            -
+              name: 'Size of {#SHARE} {#NAME}'
+              type: DEPENDENT
+              key: 'vmsizes.size[{#SHARE},{#NAME}]'
+              delay: '0'
+              units: B
+              applications:
+                -
+                  name: 'VM sizes'
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - '$[?(@.share==''{#SHARE}'' && @.name==''{#NAME}'')].size.first()'
+              master_item:
+                key: vmsizes.get
+          master_item:
+            key: vmsizes.get
+          lld_macro_paths:
+            -
+              lld_macro: '{#NAME}'
+              path: $.name
+            -
+              lld_macro: '{#SHARE}'
+              path: $.share

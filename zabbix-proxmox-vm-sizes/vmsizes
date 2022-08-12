@@ -1,0 +1,28 @@
+#!/bin/bash
+# 
+# get disk usage per vm
+# zabbix_sender -z xxx.xxx.xxx.xxx -s HOST -k key -o `cat file.json`
+# zabbix_sender -z 192.168.103.156 -s proxmox-global -k vmsizes.discover -o `cat /tmp/vm-sizess.json`
+
+# name of host in zabbix
+HOST=foo.bar
+# zabbix server
+SERVER=zabbix.example.com
+
+OUTPUT=/tmp/vm-sizes.json
+
+# echo -n '{"data":[' > $OUTPUT
+echo -n '[' > $OUTPUT
+
+ls -1 -d /mnt/pve/*/images/*|while read i
+
+do 
+	D=`echo $i | sed 's/\/mnt\/pve\/\(.*\)\/images\/.*/\1/g'`
+	B=`basename $i`
+	N=`/usr/local/bin/idname $B`
+	SIZE=`du -s $i| cut -f1`
+	echo -n "{\"share\":\"$D\",\"name\":\"$N\",\"size\":\"$SIZE\"},"
+done | sed -e 's:\},$:\}:' >> $OUTPUT
+echo -n ']' >> $OUTPUT
+
+zabbix_sender -z $HOST -s $SERVER -k vmsizes.get -o `cat $OUTPUT`
