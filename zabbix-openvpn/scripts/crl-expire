@@ -1,0 +1,6 @@
+#!/bin/bash
+# check when crl expires
+# part of Template zabbix-openvpn
+
+D=`openssl crl -text -noout -in /etc/openvpn/crl.pem|grep Next | sed 's/^[\t ]*Next Update: //'`
+echo \(`date +%s -d "$D"`-`date +%s`\)/86400|bc
